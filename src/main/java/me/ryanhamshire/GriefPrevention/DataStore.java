@@ -29,13 +29,12 @@ import me.ryanhamshire.GriefPrevention.events.ClaimModifiedEvent;
 import me.ryanhamshire.GriefPrevention.events.ClaimResizeEvent;
 import me.ryanhamshire.GriefPrevention.events.ClaimTransferEvent;
 import me.ryanhamshire.GriefPrevention.util.BoundingBox;
+import me.thiagorigonatti.griefprevention.util.MessageLocalization;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -89,7 +88,7 @@ public abstract class DataStore
     protected final static String dataLayerFolderPath = "plugins" + File.separator + "GriefPreventionData";
     final static String playerDataFolderPath = dataLayerFolderPath + File.separator + "PlayerData";
     final static String configFilePath = dataLayerFolderPath + File.separator + "config.yml";
-    final static String messagesFilePath = dataLayerFolderPath + File.separator + "messages.yml";
+    public static String languageFolderPath = dataLayerFolderPath + File.separator + "Lang";
     final static String softMuteFilePath = dataLayerFolderPath + File.separator + "softMute.txt";
     final static String bannedWordsFilePath = dataLayerFolderPath + File.separator + "bannedWords.txt";
 
@@ -1311,7 +1310,7 @@ public abstract class DataStore
         }
     }
 
-    //educates a player about /adminclaims and /acb, if he can use them 
+    //educates a player about /adminclaims and /acb, if he can use them
     public void tryAdvertiseAdminAlternatives(@NotNull Player player)
     {
         if (player.hasPermission("griefprevention.adminclaims") && player.hasPermission("griefprevention.adjustclaimblocks"))
@@ -1333,58 +1332,22 @@ public abstract class DataStore
         Messages[] messageIDs = Messages.values();
         this.messages = new String[messageIDs.length];
 
-        //load the config file
-        FileConfiguration config = YamlConfiguration.loadConfiguration(new File(messagesFilePath));
+        String loadedLocale = MessageLocalization.applyConfiguredLocaleToMessages(GriefPrevention.instance.config_locale, messageIDs);
 
-        //for each message ID
         for (Messages message : messageIDs)
         {
-            String messagePath = "Messages." + message.name();
-            // If available, migrate legacy path.
-            if (config.isString(messagePath + ".Text"))
-            {
-                this.messages[message.ordinal()] = config.getString(messagePath + ".Text", message.defaultValue);
-            }
-            // Otherwise prefer current value if available.
-            else
-            {
-                this.messages[message.ordinal()] = config.getString(messagePath, message.defaultValue);
-            }
-            config.set(messagePath, this.messages[message.ordinal()]);
+            this.messages[message.ordinal()] = message.defaultValue;
 
             //support color codes
             if (message != Messages.HowToClaimRegex)
             {
                 this.messages[message.ordinal()] = this.messages[message.ordinal()].replace('$', (char) 0x00A7);
             }
-
-            if (message.notes != null)
-            {
-                // Import old non-comment notes.
-                String notesString = config.getString(messagePath + ".Notes", message.notes);
-                // Import existing comment notes.
-                List<String> notes = config.getComments(messagePath);
-                if (notes.isEmpty()) {
-                    notes = List.of(notesString);
-                }
-                config.setComments(messagePath, notes);
-            }
         }
 
-        //save any changes
-        try
-        {
-            config.options().setHeader(List.of(
-                    "Use a YAML editor like NotepadPlusPlus to edit this file.",
-                    "After editing, back up your changes before reloading the server in case you made a syntax error.",
-                    "Use dollar signs ($) for formatting codes, which are documented here: http://minecraft.wiki/Formatting_codes#Color_codes"
-            ));
-            config.save(DataStore.messagesFilePath);
-        }
-        catch (IOException exception)
-        {
-            GriefPrevention.AddLogEntry("Unable to write to the configuration file at \"" + DataStore.messagesFilePath + "\"");
-        }
+        GriefPrevention.AddLogEntry("""
+                "Loaded messages for locale "%s" from "%s"
+                """.formatted(loadedLocale, DataStore.languageFolderPath));
     }
 
     synchronized public String getMessage(Messages messageID, String... args)

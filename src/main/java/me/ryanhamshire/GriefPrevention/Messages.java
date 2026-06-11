@@ -214,7 +214,7 @@ public enum Messages
     SubclaimUnrestricted("This subclaim's permissions will now inherit from the parent claim"),
     NetherPortalTrapDetectionMessage("It seems you might be stuck inside a nether portal. We will rescue you in a few seconds if that is the case!", "Sent to player on join, if they left while inside a nether portal.");
 
-    final @NotNull String defaultValue;
+    @NotNull String defaultValue;
     final @Nullable String notes;
 
     Messages(@NotNull String defaultValue, @NotNull String notes) {
@@ -227,4 +227,7 @@ public enum Messages
         this.notes = null;
     }
 
+    public void setDefaultValue(@NotNull String defaultValue) {
+        this.defaultValue = defaultValue;
+    }
 }
