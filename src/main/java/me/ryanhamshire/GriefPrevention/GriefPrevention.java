@@ -235,6 +235,9 @@ public class GriefPrevention extends JavaPlugin
     public boolean config_logs_debugEnabled;
     public boolean config_logs_mutedChatEnabled;
 
+    //localization settings
+    public String config_locale;
+
     //ban management plugin interop settings
     public boolean config_ban_useCommand;
     public String config_ban_commandFormat;
@@ -413,6 +416,7 @@ public class GriefPrevention extends JavaPlugin
 
         //read configuration settings (note defaults)
         int configVersion = config.getInt("GriefPrevention.ConfigVersion", 0);
+        this.config_locale = config.getString("GriefPrevention.Locale", "en");
 
         //get (deprecated node) claims world names from the config file
         List<World> worlds = this.getServer().getWorlds();
@@ -510,7 +514,7 @@ public class GriefPrevention extends JavaPlugin
             }
 
             //if the setting WOULD be disabled but this is a server upgrading from the old config format,
-            //then default to survival mode for safety's sake (to protect any admin claims which may 
+            //then default to survival mode for safety's sake (to protect any admin claims which may
             //have been created there)
             if (this.config_claims_worldModes.get(world) == ClaimsMode.Disabled &&
                     !deprecated_claimsEnabledWorldNames.isEmpty())
@@ -852,6 +856,7 @@ public class GriefPrevention extends JavaPlugin
         outConfig.set("GriefPrevention.Abridged Logs.Included Entry Types.Administrative Activity", this.config_logs_adminEnabled);
         outConfig.set("GriefPrevention.Abridged Logs.Included Entry Types.Debug", this.config_logs_debugEnabled);
         outConfig.set("GriefPrevention.Abridged Logs.Included Entry Types.Muted Chat Messages", this.config_logs_mutedChatEnabled);
+        outConfig.set("GriefPrevention.Locale", this.config_locale);
         outConfig.set("GriefPrevention.ConfigVersion", 1);
 
         try
